@@ -20,27 +20,12 @@ def process_health(image):                  #process health, takes screen and re
 
     #image = roi(image, [health_roi])
 
-    #damage = (99,12,17)
-    #damage_upper = (102,21,23)
-
     damage_value = [99,20,19]               #pixel color value for damage
     health_value = [7,138,54]               #pixel color value for health
-
-    
-
-    
-    #health_left = (5,135,50)
-    #health_left_upper = (8,141,57)
     
     damage_result = np.count_nonzero(np.all(image==damage_value,axis=2))        #find damage pixels
     health_result = np.count_nonzero(np.all(image==health_value,axis=2))        #find health pixels
 
-
-
-
-    
-
-    
     total_health = damage_result + health_result                                #calcs % of health
     if total_health != 0:
         enemy_health = (health_result/total_health) * 100
@@ -75,8 +60,7 @@ def main():
         screen = grab_screen(region = (0,40, 767, 530))                  #converts image to an array
         enemy_health = process_health(screen)
         player_health = process_player_health(screen)
-        print('Player Health:', player_health)
-        print("Enemy Health:", enemy_health)
+        print('Player Health: ', round(player_health,2), "Enemy Health: ", round(enemy_health,2))
         print('Frame Took {} seconds'.format(time.time()-last_time))
 
 
