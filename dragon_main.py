@@ -7,6 +7,8 @@ from grabkeys import key_check
 import os
 from pynput import mouse
 from pynput.mouse import Button, Controller
+import torch
+from detecto import core,utils,visualize
 
 
 def roi(img, vertices):                                                         #defines the ROI
@@ -34,7 +36,8 @@ def process_health(image):                  #process health, takes screen and re
         return 0    
     
 def process_player_health(image):                                               #same thing as before but for player health
-    player_roi = np.array([[250,200],[250,190],[280,190],[280,190]])
+    #player_roi = np.array([[250,200],[250,190],[280,190],[280,200]])
+    player_roi = np.array([[535,487],[535,237],[550,237],[550,487]])
     player_damage = [255,0,0]
     player_health = [0,255,0]
 
@@ -48,6 +51,31 @@ def process_player_health(image):                                               
     else:
         return 0  
 
+model = core.Model.load('model_weights.pth', ['dragon'])
+#if torch.cuda.is_available():
+#    print('Switching to GPU')
+#device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+#model = model.to(device)
+
+
+def detect_dragons():
+    dragon_screen = grab_screen(region = (0,30, 520, 365))
+    
+    predictions = model.predict(dragon_screen)
+
+    labels, boxes, scores = predictions
+
+    new_scores = []
+    new_boxes = []
+    i = 0
+    for score in scores:
+        if score >= 0.91:
+            new_scores.append(score)
+            new_boxes.append(boxes[i])
+        i += 1
+    return new_scores, new_boxes
+
 
 def main():
     for i in list(range(4))[::-1]:
@@ -57,9 +85,13 @@ def main():
     last_time = time.time()
 
     while(True):                                                                    #image showing
-        screen = grab_screen(region = (0,40, 767, 530))                  #converts image to an array
+        screen = grab_screen(region = (0,30, 767, 530))                  #converts image to an array
         enemy_health = process_health(screen)
         player_health = process_player_health(screen)
+
+        if enemy_health <= 30:
+            dragon_probs, dragon_locs = detect_dragons()
+            print('Dragons: ', dragon_probs)
         print('Player Health: ', round(player_health,2), "Enemy Health: ", round(enemy_health,2))
         print('Frame Took {} seconds'.format(time.time()-last_time))
 
